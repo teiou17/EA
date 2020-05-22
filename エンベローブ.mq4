@@ -2,27 +2,27 @@
 #property copyright "Copyright (c) 2012, Toyolab FX"
 #property link      "http://forex.toyolab.com/"
 
-// ƒ}ƒCƒ‰ƒCƒuƒ‰ƒŠ[
+// ãƒã‚¤ãƒ©ã‚¤ãƒ–ãƒ©ãƒªãƒ¼
 #define POSITIONS 1
 #include <MyPosition.mqh>
 
-// ƒ}ƒWƒbƒNƒiƒ“ƒo[
+// ãƒã‚¸ãƒƒã‚¯ãƒŠãƒ³ãƒãƒ¼
 int Magic = 20121000;
 string EAname = "BBCross1Time_EA";
 
-// ŠO•”ƒpƒ‰ƒ[ƒ^
-extern double Lots = 0.1;  // ”„”ƒƒƒbƒg”
-extern int StartHour = 12; // ŠJnij
-extern int EndHour = 20;   // I—¹ij
+// å¤–éƒ¨ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
+extern double Lots = 0.1;  // å£²è²·ãƒ­ãƒƒãƒˆæ•°
+extern int StartHour = 12; // é–‹å§‹æ™‚åˆ»ï¼ˆæ™‚ï¼‰
+extern int EndHour = 20;   // çµ‚äº†æ™‚åˆ»ï¼ˆæ™‚ï¼‰
 
-// ƒeƒNƒjƒJƒ‹w•W‚Ìİ’è
+// ãƒ†ã‚¯ãƒ‹ã‚«ãƒ«æŒ‡æ¨™ã®è¨­å®š
 #define MaxBars 3
-double Enve_U[MaxBars];      // ãˆÊƒ‰ƒCƒ“—p‚Ì”z—ñ
-double Enve_L[MaxBars];      // ‰ºˆÊƒ‰ƒCƒ“—p‚Ì”z—ñ
-extern int BBPeriod = 20;  // ƒ{ƒŠƒ“ƒWƒƒ[ƒoƒ“ƒh‚ÌŠúŠÔ
-extern int BBDev = 2;      // •W€•Î·‚Ì”{—¦
+double Enve_U[MaxBars];      // ä¸Šä½ãƒ©ã‚¤ãƒ³ç”¨ã®é…åˆ—
+double Enve_L[MaxBars];      // ä¸‹ä½ãƒ©ã‚¤ãƒ³ç”¨ã®é…åˆ—
+extern int BBPeriod = 20;  // ãƒœãƒªãƒ³ã‚¸ãƒ£ãƒ¼ãƒãƒ³ãƒ‰ã®æœŸé–“
+extern int BBDev = 2;      // æ¨™æº–åå·®ã®å€ç‡
 
-// ƒeƒNƒjƒJƒ‹w•W‚ÌXV
+// ãƒ†ã‚¯ãƒ‹ã‚«ãƒ«æŒ‡æ¨™ã®æ›´æ–°
 void RefreshIndicators()
 {
    for(int i=0; i<MaxBars; i++)
@@ -34,33 +34,33 @@ void RefreshIndicators()
    }
 }
 
-// I’l‚ªw•W‚ğã”²‚¯
+// çµ‚å€¤ãŒæŒ‡æ¨™ã‚’ä¸ŠæŠœã‘
 bool CrossUpClose(double& ind2[], int shift)
 {
    return(Close[shift+1] <= ind2[shift+1] && Close[shift] > ind2[shift]);
 }
 
-// I’l‚ªw•W‚ğ‰º”²‚¯
+// çµ‚å€¤ãŒæŒ‡æ¨™ã‚’ä¸‹æŠœã‘
 bool CrossDownClose(double& ind2[], int shift)
 {
    return(Close[shift+1] >= ind2[shift+1] && Close[shift] < ind2[shift]);
 }
 
-// ƒGƒ“ƒgƒŠ[ŠÖ”
+// ã‚¨ãƒ³ãƒˆãƒªãƒ¼é–¢æ•°
 int EntrySignal(int pos_id)
 {
-   // ƒI[ƒvƒ“ƒ|ƒWƒVƒ‡ƒ“‚ÌŒvZ
+   // ã‚ªãƒ¼ãƒ—ãƒ³ãƒã‚¸ã‚·ãƒ§ãƒ³ã®è¨ˆç®—
    double pos = MyOrderOpenLots(pos_id);
 
    int ret = 0;
-   // ”ƒ‚¢ƒVƒOƒiƒ‹
+   // è²·ã„ã‚·ã‚°ãƒŠãƒ«
    if(pos <= 0 && CrossDownClose(Enve_U, 1)) ret = 1;
-   // ”„‚èƒVƒOƒiƒ‹
+   // å£²ã‚Šã‚·ã‚°ãƒŠãƒ«
    if(pos >= 0 && CrossUpClose(Enve_U, 1)) ret = -1;
    return(ret);
 }
 
-// ƒtƒBƒ‹ƒ^[ŠÖ”
+// ãƒ•ã‚£ãƒ«ã‚¿ãƒ¼é–¢æ•°
 int FilterSignal(int signal)
 {
    int ret = 0;
@@ -75,35 +75,35 @@ int FilterSignal(int signal)
    return(ret);
 }
 
-// ‰Šú‰»ŠÖ”
+// åˆæœŸåŒ–é–¢æ•°
 int init()
 {
-   // ƒ|ƒWƒVƒ‡ƒ“‚Ì‰Šú‰»
+   // ãƒã‚¸ã‚·ãƒ§ãƒ³ã®åˆæœŸåŒ–
    MyInitPosition(Magic);
    return(0);
 }
 
-// ƒeƒBƒbƒNÀsŠÖ”
+// ãƒ†ã‚£ãƒƒã‚¯æ™‚å®Ÿè¡Œé–¢æ•°
 int start()
 {
-   // ƒeƒNƒjƒJƒ‹w•W‚ÌXV
+   // ãƒ†ã‚¯ãƒ‹ã‚«ãƒ«æŒ‡æ¨™ã®æ›´æ–°
    RefreshIndicators();
    
-   // ƒ|ƒWƒVƒ‡ƒ“‚ÌXV
+   // ãƒã‚¸ã‚·ãƒ§ãƒ³ã®æ›´æ–°
    MyCheckPosition();
 
-   // ƒGƒ“ƒgƒŠ[ƒVƒOƒiƒ‹
+   // ã‚¨ãƒ³ãƒˆãƒªãƒ¼ã‚·ã‚°ãƒŠãƒ«
    int sig_entry = EntrySignal(0);
 
-   // ”½‘ÎƒVƒOƒiƒ‹‚É‚æ‚éƒ|ƒWƒVƒ‡ƒ“‚ÌŒˆÏ
+   // åå¯¾ã‚·ã‚°ãƒŠãƒ«ã«ã‚ˆã‚‹ãƒã‚¸ã‚·ãƒ§ãƒ³ã®æ±ºæ¸ˆ
    if(sig_entry != 0) MyOrderClose(0);
 
-   // ƒGƒ“ƒgƒŠ[ƒVƒOƒiƒ‹‚ÌƒtƒBƒ‹ƒ^[
+   // ã‚¨ãƒ³ãƒˆãƒªãƒ¼ã‚·ã‚°ãƒŠãƒ«ã®ãƒ•ã‚£ãƒ«ã‚¿ãƒ¼
    sig_entry = FilterSignal(sig_entry);
 
-   // ”ƒ‚¢’•¶
+   // è²·ã„æ³¨æ–‡
    if(sig_entry > 0) MyOrderSend(0, OP_BUY, Lots, 0, 0, 0, EAname);
-   // ”„‚è’•¶
+   // å£²ã‚Šæ³¨æ–‡
    if(sig_entry < 0) MyOrderSend(0, OP_SELL, Lots, 0, 0, 0, EAname);
    return(0);
 }

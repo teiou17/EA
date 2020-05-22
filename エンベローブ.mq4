@@ -1,27 +1,28 @@
 // BBcross1Time_EA.mq4
 #property copyright "Copyright (c) 2012, Toyolab FX"
+#property link      "http://forex.toyolab.com/"
 
-// ï¿½}ï¿½Cï¿½ï¿½ï¿½Cï¿½uï¿½ï¿½ï¿½ï¿½ï¿½[
+// ƒ}ƒCƒ‰ƒCƒuƒ‰ƒŠ[
 #define POSITIONS 1
 #include <MyPosition.mqh>
 
-// ï¿½}ï¿½Wï¿½bï¿½Nï¿½iï¿½ï¿½ï¿½oï¿½[
+// ƒ}ƒWƒbƒNƒiƒ“ƒo[
 int Magic = 20121000;
 string EAname = "BBCross1Time_EA";
 
-// ï¿½Oï¿½ï¿½ï¿½pï¿½ï¿½ï¿½ï¿½ï¿½[ï¿½^
-extern double Lots = 0.1;  // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½bï¿½gï¿½ï¿½
-extern int StartHour = 12; // ï¿½Jï¿½nï¿½ï¿½ï¿½ï¿½ï¿½iï¿½ï¿½ï¿½j
-extern int EndHour = 20;   // ï¿½Iï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½iï¿½ï¿½ï¿½j
+// ŠO•”ƒpƒ‰ƒ[ƒ^
+extern double Lots = 0.1;  // ”„”ƒƒƒbƒg”
+extern int StartHour = 12; // ŠJnij
+extern int EndHour = 20;   // I—¹ij
 
-// ï¿½eï¿½Nï¿½jï¿½Jï¿½ï¿½ï¿½wï¿½Wï¿½Ìİ’ï¿½
+// ƒeƒNƒjƒJƒ‹w•W‚Ìİ’è
 #define MaxBars 3
-double Enve_U[MaxBars];      // ï¿½ï¿½Êƒï¿½ï¿½Cï¿½ï¿½ï¿½pï¿½Ì”zï¿½ï¿½
-double Enve_L[MaxBars];      // ï¿½ï¿½ï¿½Êƒï¿½ï¿½Cï¿½ï¿½ï¿½pï¿½Ì”zï¿½ï¿½
-extern int BBPeriod = 20;  // ï¿½{ï¿½ï¿½ï¿½ï¿½ï¿½Wï¿½ï¿½ï¿½[ï¿½oï¿½ï¿½ï¿½hï¿½ÌŠï¿½ï¿½ï¿½
-extern int BBDev = 2;      // ï¿½Wï¿½ï¿½ï¿½Îï¿½ï¿½Ì”{ï¿½ï¿½
+double Enve_U[MaxBars];      // ãˆÊƒ‰ƒCƒ“—p‚Ì”z—ñ
+double Enve_L[MaxBars];      // ‰ºˆÊƒ‰ƒCƒ“—p‚Ì”z—ñ
+extern int BBPeriod = 20;  // ƒ{ƒŠƒ“ƒWƒƒ[ƒoƒ“ƒh‚ÌŠúŠÔ
+extern int BBDev = 2;      // •W€•Î·‚Ì”{—¦
 
-// ï¿½eï¿½Nï¿½jï¿½Jï¿½ï¿½ï¿½wï¿½Wï¿½ÌXï¿½V
+// ƒeƒNƒjƒJƒ‹w•W‚ÌXV
 void RefreshIndicators()
 {
    for(int i=0; i<MaxBars; i++)
@@ -33,33 +34,33 @@ void RefreshIndicators()
    }
 }
 
-// ï¿½Iï¿½lï¿½ï¿½ï¿½wï¿½Wï¿½ï¿½ï¿½ã”²ï¿½ï¿½
+// I’l‚ªw•W‚ğã”²‚¯
 bool CrossUpClose(double& ind2[], int shift)
 {
    return(Close[shift+1] <= ind2[shift+1] && Close[shift] > ind2[shift]);
 }
 
-// ï¿½Iï¿½lï¿½ï¿½ï¿½wï¿½Wï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+// I’l‚ªw•W‚ğ‰º”²‚¯
 bool CrossDownClose(double& ind2[], int shift)
 {
    return(Close[shift+1] >= ind2[shift+1] && Close[shift] < ind2[shift]);
 }
 
-// ï¿½Gï¿½ï¿½ï¿½gï¿½ï¿½ï¿½[ï¿½Öï¿½
+// ƒGƒ“ƒgƒŠ[ŠÖ”
 int EntrySignal(int pos_id)
 {
-   // ï¿½Iï¿½[ï¿½vï¿½ï¿½ï¿½|ï¿½Wï¿½Vï¿½ï¿½ï¿½ï¿½ï¿½ÌŒvï¿½Z
+   // ƒI[ƒvƒ“ƒ|ƒWƒVƒ‡ƒ“‚ÌŒvZ
    double pos = MyOrderOpenLots(pos_id);
 
    int ret = 0;
-   // ï¿½ï¿½ï¿½ï¿½ï¿½Vï¿½Oï¿½iï¿½ï¿½
+   // ”ƒ‚¢ƒVƒOƒiƒ‹
    if(pos <= 0 && CrossDownClose(Enve_U, 1)) ret = 1;
-   // ï¿½ï¿½ï¿½ï¿½Vï¿½Oï¿½iï¿½ï¿½
+   // ”„‚èƒVƒOƒiƒ‹
    if(pos >= 0 && CrossUpClose(Enve_U, 1)) ret = -1;
    return(ret);
 }
 
-// ï¿½tï¿½Bï¿½ï¿½ï¿½^ï¿½[ï¿½Öï¿½
+// ƒtƒBƒ‹ƒ^[ŠÖ”
 int FilterSignal(int signal)
 {
    int ret = 0;
@@ -74,35 +75,35 @@ int FilterSignal(int signal)
    return(ret);
 }
 
-// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öï¿½
+// ‰Šú‰»ŠÖ”
 int init()
 {
-   // ï¿½|ï¿½Wï¿½Vï¿½ï¿½ï¿½ï¿½ï¿½Ìï¿½ï¿½ï¿½ï¿½ï¿½
+   // ƒ|ƒWƒVƒ‡ƒ“‚Ì‰Šú‰»
    MyInitPosition(Magic);
    return(0);
 }
 
-// ï¿½eï¿½Bï¿½bï¿½Nï¿½ï¿½ï¿½ï¿½ï¿½sï¿½Öï¿½
+// ƒeƒBƒbƒNÀsŠÖ”
 int start()
 {
-   // ï¿½eï¿½Nï¿½jï¿½Jï¿½ï¿½ï¿½wï¿½Wï¿½ÌXï¿½V
+   // ƒeƒNƒjƒJƒ‹w•W‚ÌXV
    RefreshIndicators();
    
-   // ï¿½|ï¿½Wï¿½Vï¿½ï¿½ï¿½ï¿½ï¿½ÌXï¿½V
+   // ƒ|ƒWƒVƒ‡ƒ“‚ÌXV
    MyCheckPosition();
 
-   // ï¿½Gï¿½ï¿½ï¿½gï¿½ï¿½ï¿½[ï¿½Vï¿½Oï¿½iï¿½ï¿½
+   // ƒGƒ“ƒgƒŠ[ƒVƒOƒiƒ‹
    int sig_entry = EntrySignal(0);
 
-   // ï¿½ï¿½ï¿½ÎƒVï¿½Oï¿½iï¿½ï¿½ï¿½É‚ï¿½ï¿½|ï¿½Wï¿½Vï¿½ï¿½ï¿½ï¿½ï¿½ÌŒï¿½ï¿½ï¿½
+   // ”½‘ÎƒVƒOƒiƒ‹‚É‚æ‚éƒ|ƒWƒVƒ‡ƒ“‚ÌŒˆÏ
    if(sig_entry != 0) MyOrderClose(0);
 
-   // ï¿½Gï¿½ï¿½ï¿½gï¿½ï¿½ï¿½[ï¿½Vï¿½Oï¿½iï¿½ï¿½ï¿½Ìƒtï¿½Bï¿½ï¿½ï¿½^ï¿½[
+   // ƒGƒ“ƒgƒŠ[ƒVƒOƒiƒ‹‚ÌƒtƒBƒ‹ƒ^[
    sig_entry = FilterSignal(sig_entry);
 
-   // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+   // ”ƒ‚¢’•¶
    if(sig_entry > 0) MyOrderSend(0, OP_BUY, Lots, 0, 0, 0, EAname);
-   // ï¿½ï¿½ï¿½è’ï¿½ï¿½
+   // ”„‚è’•¶
    if(sig_entry < 0) MyOrderSend(0, OP_SELL, Lots, 0, 0, 0, EAname);
    return(0);
 }

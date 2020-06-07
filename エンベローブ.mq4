@@ -1,4 +1,4 @@
-// BBcross1Time_EA.mq4
+// BBCross0_EA.mq4
 #property copyright "Copyright (c) 2012, Toyolab FX"
 #property link      "http://forex.toyolab.com/"
 
@@ -7,30 +7,35 @@
 #include <MyPosition.mqh>
 
 // マジックナンバー
-int Magic = 20121000;
-string EAname = "BBCross1Time_EA";
+int Magic = 20121500;
+string EAname = "BBCross0_EA";
 
 // 外部パラメータ
 extern double Lots = 0.1;  // 売買ロット数
-extern int StartHour = 12; // 開始時刻（時）
-extern int EndHour = 20;   // 終了時刻（時）
 
 // テクニカル指標の設定
 #define MaxBars 3
-double Enve_U[MaxBars];      // 上位ライン用の配列
-double Enve_L[MaxBars];      // 下位ライン用の配列
-extern int BBPeriod = 20;  // ボリンジャーバンドの期間
-extern int BBDev = 2;      // 標準偏差の倍率
+double Enve_U[MaxBars];       // 上位ライン用の配列
+double Enve_L[MaxBars];       // 下位ライン用の配列
+extern int BBPeriod = 20;     // MAの期間
+extern double EnDev = 0.15;   // 標準偏差の倍率
+extern double SlTips =7.0;    // 損切り値幅（pips）
+extern double STPpips =30.0;   // 利食い値幅（pips）
+//中値
+double Nakachi;
+//ひげのサイズ
+double Higesize;
+int Uwahige;
+int Shitahige;
 
 // テクニカル指標の更新
 void RefreshIndicators()
 {
    for(int i=0; i<MaxBars; i++)
    {
-   
-   
-      Enve_U[i] = iEnvelopes(NULL, 0, BBPeriod, MODE_EMA, 0, PRICE_CLOSE, MODE_UPPER, BBDev,i);
-      Enve_L[i] = iEnvelopes(NULL, 0, BBPeriod, MODE_EMA, 0, PRICE_CLOSE, MODE_LOWER, BBDev,i);
+      Enve_U[i] =iEnvelopes(NULL,0,BBPeriod,0,0,0,EnDev,1,i);
+      Enve_L[i] =iEnvelopes(NULL,0,BBPeriod,0,0,0,EnDev,2,i);
+      
    }
 }
 
@@ -53,25 +58,11 @@ int EntrySignal(int pos_id)
    double pos = MyOrderOpenLots(pos_id);
 
    int ret = 0;
-   // 買いシグナル
-   if(pos <= 0 && CrossDownClose(Enve_U, 1)) ret = 1;
+    // 買いシグナル
+   if(pos <= 0 && CrossDownClose(Enve_L,1)&& Shitahige>0) ret = 1;
    // 売りシグナル
-   if(pos >= 0 && CrossUpClose(Enve_U, 1)) ret = -1;
-   return(ret);
-}
+   if(pos >= 0 && CrossUpClose(Enve_U,1)&& Uwahige>0) ret = -1;
 
-// フィルター関数
-int FilterSignal(int signal)
-{
-   int ret = 0;
-   if(StartHour < EndHour)
-   {
-      if(Hour() >= StartHour && Hour() <= EndHour) ret = signal;
-   }
-   else
-   {
-      if(Hour() >= StartHour || Hour() <= EndHour) ret = signal;
-   }
    return(ret);
 }
 
@@ -91,20 +82,29 @@ int start()
    
    // ポジションの更新
    MyCheckPosition();
-
+ //中値
+   {Nakachi=(iHigh(NULL,0,1)+iLow(NULL,0,1))/2;}
+   //プライスアクションフィルター（下髭陽線と下髭陰線）
+   {Higesize=0.04;}
+   if(iOpen(NULL,0,1)<=Nakachi&&iClose(NULL,0,1)<=Nakachi&&(iHigh(NULL,0,1)-iLow(NULL,0,1))>=Higesize)
+      {Uwahige=1;Shitahige=0;}
+   if(iOpen(NULL,0,1)>=Nakachi&&iClose(NULL,0,1)>=Nakachi&&(iHigh(NULL,0,1)-iLow(NULL,0,1))>=Higesize)
+      {Uwahige=0;Shitahige=1;} 
    // エントリーシグナル
    int sig_entry = EntrySignal(0);
-
-   // 反対シグナルによるポジションの決済
-   if(sig_entry != 0) MyOrderClose(0);
-
-   // エントリーシグナルのフィルター
-   sig_entry = FilterSignal(sig_entry);
-
+ 
    // 買い注文
-   if(sig_entry > 0) MyOrderSend(0, OP_BUY, Lots, 0, 0, 0, EAname);
+   if(sig_entry > 0)
+   {
+      MyOrderClose(0);
+      MyOrderSend(0, OP_BUY, Lots, 0, Ask-SlTips*0.01, Ask+STPpips*0.01, EAname);
+   }
    // 売り注文
-   if(sig_entry < 0) MyOrderSend(0, OP_SELL, Lots, 0, 0, 0, EAname);
+   if(sig_entry < 0)
+   {
+      MyOrderClose(0);
+      MyOrderSend(0, OP_SELL, Lots, 0, Bid+SlTips*0.01, Bid-STPpips*0.01, EAname);
+   }
    return(0);
 }
 
